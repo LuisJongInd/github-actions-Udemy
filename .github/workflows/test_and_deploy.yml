@@ -1,31 +1,46 @@
-name: Test project
-on: push
+name: Deploy website
+on:
+  push:
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Get code
         uses: actions/checkout@v3
-      - name: Intall NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Intall dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Run tests
-        run: npm test
-  deploy:
+      - name: Lint code
+        run: npm run lint
+      - name: Test code
+        run: npm run test
+  build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Get code
         uses: actions/checkout@v3
-      - name: Intall NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Intall dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Build project
+      - name: Build website
         run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: dist-files
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: ls before 
+        run: ls
+      - name: Get build artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: dist-files
+      - name: ls after
+        run: ls
       - name: Deploy
         run: echo "Deploying ..."
+
+
